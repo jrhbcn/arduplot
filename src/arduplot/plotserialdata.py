@@ -21,6 +21,7 @@
  SOFTWARE.
 '''
 
+import time
 import os
 import sys
 import signal
@@ -72,6 +73,7 @@ def main(**kwargs):
     def animate(self):
         ax.clear()
         lines = get_input().split()
+        plot_time = time.perf_counter()
         # data labelling
         if len(lines) > len(data_label):
             i = len(lines) - len(data_label)
@@ -90,9 +92,12 @@ def main(**kwargs):
                 l = float(0)
             if len(data) <= k:
                 data.append([])
+                data_time.append([])
             data[k].append(l)
+            data_time[k].append(plot_time)
             data[k] = data[k][-width:]              # truncate to the graph width
-            ax.plot(data[k], label=data_label[k])
+            data_time[k] = data_time[k][-width:]              # truncate to the graph width
+            ax.plot(data_time[k], data[k], label=data_label[k])
             k = k + 1
 
         # plotting
@@ -106,6 +111,7 @@ def main(**kwargs):
     # main control
     # main variabls
     data = []
+    data_time = []
     width = 50
     ymin = None
     ymax = None
@@ -147,8 +153,8 @@ def main(**kwargs):
             if os.path.isfile(ProjectConfig.get_default_path()):
                 config = ProjectConfig.get_instance()  # PIO project config
                 for s in config.sections():
-                    ser.port = config.get(s, 'monitor_port') or ser.port
-                    ser.baudrate = config.get(s, 'monitor_speed') or ser.baudrate
+                    ser.port = config.has_option(s,'monitor_port') and config.get(s, 'monitor_port') or ser.port
+                    ser.baudrate = config.has_option(s,'monitor_speed') and config.get(s, 'monitor_speed') or ser.baudrate
             ser.port = kwargs['port'] or ser.port
             ser.baudrate = kwargs['baud'] or ser.baudrate
             if ser.port is None:
@@ -176,7 +182,7 @@ def main(**kwargs):
     else:
         fig.canvas.manager.set_window_title('tcp://localhost:'+str(tcp_socket))
     ax = fig.subplots()
-    ani = animation.FuncAnimation(fig, animate,  interval=1000)
+    ani = animation.FuncAnimation(fig, animate,  interval=100)
     plt.show()
 # END MAIN FUNCTION
 
