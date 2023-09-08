@@ -55,6 +55,7 @@ def value_by_key(j, key, value):
 @click.option("--ymin", "-i", type=int, help="Plotter Y axis Min")
 @click.option("--ymax", "-x", type=int, help="Plotter Y axis Max")
 @click.option("--title", "-t",  help="Plotter Title")
+@click.option("--ylabel", "-y",  help="Y axes label")
 @click.option("--socket", "-s", type=int, help="TCP Socket Port number")
 @click.option("--port", "-p", help="Serial Port, a number or a device name")
 @click.option("--baud", "-b", type=int, help="Set baudrate, default=115200")
@@ -72,8 +73,8 @@ def main(**kwargs):
     # Callback function for plotting the data by animation.FuncAnimation
     def animate(self):
         ax.clear()
-        lines = get_input().split()
         plot_time = time.perf_counter()
+        lines = get_input().split()
         # data labelling
         if len(lines) > len(data_label):
             i = len(lines) - len(data_label)
@@ -97,10 +98,12 @@ def main(**kwargs):
             data_time[k].append(plot_time)
             data[k] = data[k][-width:]              # truncate to the graph width
             data_time[k] = data_time[k][-width:]              # truncate to the graph width
-            ax.plot(data_time[k], data[k], label=data_label[k])
+            ax.plot(data_time[k],data[k], label=data_label[k])
             k = k + 1
 
         # plotting
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
         plt.title(title)
         plt.xticks(rotation=90, ha='right')
         plt.legend()
@@ -116,6 +119,8 @@ def main(**kwargs):
     ymin = None
     ymax = None
     title = 'Serial Data Plot'
+    xlabel = 'seconds'
+    ylabel = ''
     data_label = []
     tcp_socket = kwargs['socket'] or None
 
@@ -124,6 +129,7 @@ def main(**kwargs):
         with open('plotcfg.json', 'r', encoding='utf-8') as jfile:
             plot_cfg = json.load(jfile)
         title = value_by_key(plot_cfg, 'title', title)
+        ylabel = value_by_key(plot_cfg, 'ylabel', ylabel)
         width = value_by_key(plot_cfg, 'width', width)
         ymin = value_by_key(plot_cfg, 'ymin', ymin)
         ymax = value_by_key(plot_cfg, 'ymax', ymax)
@@ -131,6 +137,7 @@ def main(**kwargs):
     except FileNotFoundError:
         pass
     title = kwargs['title'] or title
+    ylabel = kwargs['ylabel'] or ylabel
     width = kwargs['width'] or width
     ymin = kwargs['ymin'] or ymin
     ymax = kwargs['ymax'] or ymax
