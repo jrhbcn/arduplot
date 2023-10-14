@@ -73,33 +73,43 @@ def main(**kwargs):
     # Callback function for plotting the data by animation.FuncAnimation
     def animate(self):
         ax.clear()
-        plot_time = time.perf_counter()
-        lines = get_input().split()
-        # data labelling
-        if len(lines) > len(data_label):
-            i = len(lines) - len(data_label)
-            j = 0
-            while i > j:
-                data_label.append('data' + str(j + 1))
-                j = j + 1
 
-        # data array preparation
-        k = 0
-        for l in lines:
-            try:
-                l = float(l)
-            except ValueError:
-                print(f"Can't convert {l} to float. it's zeroed out")
-                l = float(0)
-            if len(data) <= k:
-                data.append([])
-                data_time.append([])
-            data[k].append(l)
-            data_time[k].append(plot_time)
-            data[k] = data[k][-width:]              # truncate to the graph width
-            data_time[k] = data_time[k][-width:]              # truncate to the graph width
-            ax.plot(data_time[k],data[k], label=data_label[k])
-            k = k + 1
+        plot_time = time.perf_counter()
+
+        lines = get_input().decode().strip().split(',')
+
+        print(lines,flush=True)
+
+        try:
+
+            # data array preparation
+            for l in lines:
+
+                ll = l.split(':')
+                k = ll[0]
+                v = float(ll[1])
+
+                # check if graph exists
+                if k not in data:
+                    data[k] = []
+                    data_time[k] = []
+
+                # append data
+                data[k].append(v)
+                data_time[k].append(plot_time)
+
+        except:
+            print(f"Can't read line")
+
+
+        # plot all data
+        for k in data:
+            
+            # truncate data to show last width seconds
+            #data[k] = data[k][-width:]
+            #data_time[k] = data_time[k][-width:]
+
+            ax.plot(data_time[k],data[k], label=k)
 
         # plotting
         ax.set_xlabel(xlabel)
@@ -107,14 +117,14 @@ def main(**kwargs):
         plt.title(title)
         plt.xticks(rotation=90, ha='right')
         plt.legend()
-        plt.axis([0, width, ymin, ymax])
+        plt.axis([max(0,plot_time-width), max(plot_time,width), ymin, ymax])
         plt.grid(color='gray', linestyle='dotted', linewidth=1)
         fig.tight_layout(pad=2.5)
 
     # main control
     # main variabls
-    data = []
-    data_time = []
+    data = {}
+    data_time = {}
     width = 50
     ymin = None
     ymax = None
